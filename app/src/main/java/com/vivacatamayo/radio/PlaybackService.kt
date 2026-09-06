@@ -30,6 +30,9 @@ class PlaybackService : MediaSessionService() {
     private val sleepRunnable = Runnable {
         if (::player.isInitialized) {
             player.pause()
+            getSharedPreferences("vct_radio_prefs", MODE_PRIVATE).edit()
+                .putInt("sleep_minutes", 0)
+                .apply()
             Toast.makeText(this, "Temporizador finalizado · radio pausada", Toast.LENGTH_SHORT).show()
         }
     }
@@ -69,7 +72,7 @@ class PlaybackService : MediaSessionService() {
             setWakeMode(C.WAKE_MODE_NETWORK)
             val metadata = MediaMetadata.Builder()
                 .setTitle(RadioConfig.STATION_NAME)
-                .setArtist(RadioConfig.SLOGAN)
+                .setArtist("En vivo · ${RadioConfig.SLOGAN}")
                 .setAlbumTitle(RadioConfig.LOCATION)
                 .setIsPlayable(true)
                 .build()
