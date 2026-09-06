@@ -1,7 +1,9 @@
 package com.vivacatamayo.radio
 
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -23,6 +25,13 @@ class PlaybackService : MediaSessionService() {
         if (!userWantsPlayback) return@Runnable
         player.prepare()
         player.play()
+    }
+
+    private val sleepRunnable = Runnable {
+        if (::player.isInitialized) {
+            player.pause()
+            Toast.makeText(this, "Temporizador finalizado · radio pausada", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private val listener = object : Player.Listener {
@@ -71,9 +80,21 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, player).build()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_SET_SLEEP_TIMER -> {
+                val minutes = intent.getIntExtra(EXTRA_SLEEP_MINUTES, 0)
+                handler.removeCallbacks(sleepRunnable)
+                if (minutes > 0) handler.postDelayed(sleepRunnable, minutes * 60_000L)
+            }
+            ACTION_CANCEL_SLEEP_TIMER -> handler.removeCallbacks(sleepRunnable)
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
-    override fun onTaskRemoved(rootIntent: android.content.Intent?) {
+    override fun onTaskRemoved(rootIntent: Intent?) {
         if (!player.playWhenReady || player.mediaItemCount == 0) stopSelf()
     }
 
@@ -84,5 +105,11 @@ class PlaybackService : MediaSessionService() {
         player.release()
         mediaSession = null
         super.onDestroy()
+    }
+
+    companion object {
+        const val ACTION_SET_SLEEP_TIMER = "com.vivacatamayo.radio.action.SET_SLEEP_TIMER"
+        const val ACTION_CANCEL_SLEEP_TIMER = "com.vivacatamayo.radio.action.CANCEL_SLEEP_TIMER"
+        const val EXTRA_SLEEP_MINUTES = "sleep_minutes"
     }
 }
