@@ -4,4 +4,4 @@ Aplicación Android nativa para VivaCatamayo Radio Web.
 
 Versión: 1.1.0
 
-Este repositorio se utiliza para compilar el APK de prueba mediante GitHub Actions.
+Incluye reproducción en segundo plano con Media3, reconexión automática, acceso a VivaCatamayo.com, WhatsApp y compilación automática del APK mediante GitHub Actions.
